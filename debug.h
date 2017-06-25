@@ -16,7 +16,7 @@ typedef Eigen::SparseMatrix<double> SpMat;
 
 ofstream result_matrix("result_matrix.dat", std::ofstream::out);
 ofstream result_m("result_m.dat", std::ofstream::out);
-ofstream triangle_temp("triangle_temp.dat", std::ofstream::out | std::fstream::app);
+ofstream triangle_temp("triangle_temp.dat", std::ofstream::out);
 
 void ShowRunParameters()
 {
@@ -48,39 +48,28 @@ void ShowTemperature()
      * Debug вывод распределения температуры на треугольнике во времени
      * для проверки полученного решения
      */
-
-    uint_fast32_t dots_num = floor(TRIANGLE_BASE / STEP_X) + 1;
-    uint_fast32_t dots_num_next = dots_num;
-    uint_fast32_t dots_shift = 0;
+    int_fast32_t dots_shift = DOTS_NUMBER - 3;
+    uint_fast32_t level = 3;
 
     triangle_temp << "Number of dots = " << DOTS_NUMBER << endl;
     triangle_temp << "Number of triangles = " << TRIANGLES_NUMBER << endl;
     triangle_temp << "Space step h = " << STEP_X << endl;
     triangle_temp << "Time step tau = " << TAU << endl;
     triangle_temp << "Thermal_Conductivity = " << Thermal_Conductivity << endl;
+    triangle_temp << "flight time = " << flight_time << endl;
+    triangle_temp << "heat flow = " << heat_flow << endl;
 
-    dots_num = floor(TRIANGLE_BASE / STEP_X) + 1;
-    dots_num_next = dots_num;
-    dots_shift = 0;
-    triangle_temp << endl;
-    triangle_temp << "Flight time = " << flight_time << endl;
-    triangle_temp << "Heat flow = " << heat_flow << endl;
-    triangle_temp << "Average temperature = " << average_temp << endl;
-    for (auto strs = 0; strs < dots_num; strs++)
-        triangle_temp << "**********";
-    triangle_temp << endl;
-    for (auto d = 0; d < DOTS_NUMBER; d++) {
-        if (d == dots_num) {
-            dots_num_next = dots_num_next - 1;
-            dots_num = dots_num + dots_num_next;
-            dots_shift ++;
-            triangle_temp << endl;
-            for (auto st = 0; st < dots_shift; st++)
-                triangle_temp << setw(6) << "       ";
+    triangle_temp << setw(10) << setprecision(6)<< Temperature[DOTS_NUMBER - 1] << endl;
+
+    for (int_fast32_t i = DOTS_NUMBER - 2; level < (TRIANGLE_BASE / STEP_X + 3); i-=level) {
+        for (int j = 0; j < level - 1; j++) {
+            triangle_temp << setw(10) << setprecision(6)<< Temperature[dots_shift + j] << " ";
         }
-        triangle_temp << setw(6) << setprecision(4)<< Temperature[d] << " ";
+
+        dots_shift -= level;
+        level += 1;
+        triangle_temp << endl;
     }
-
-
+    triangle_temp << endl;
 }
 #endif //DIPLOMSOLDATOVEIGEN_DEBUG_H

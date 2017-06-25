@@ -136,7 +136,7 @@ void fem_triangle_element::Matrix_K(double_t K[DIMENSION][DIMENSION], char eleme
 
         for (int i = 0; i < DIMENSION; i++) {
             for (int j = 0; j < DIMENSION; j++) {
-                K[i][j] = ( 2.0 * PI * R * Thermal_Conductivity / (4.0 * GetSquareTriangleArea()))
+                K[i][j] = ( 2.0 * PI * R * Thermal_Conductivity / (4.0 * GetMatrixADeterminant()))
                           * (b[i] * b[j] + c[i] * c[j]);
             }
         }
@@ -148,7 +148,7 @@ void fem_triangle_element::Matrix_K(double_t K[DIMENSION][DIMENSION], char eleme
     /*if ((fabs(first_point.y) < EPS_T) && (fabs(second_point.y) < EPS_T) && (Coeff_H > EPS_T)) {
         for (int i = 0; i < DIMENSION; i++) {
             for (int j = 0; j < DIMENSION; j++) {
-                K[i][j] = (Thermal_Conductivity  * 2.0 * PI * R / (4.0 * GetSquareTriangleArea()))
+                K[i][j] = (Thermal_Conductivity  * 2.0 * PI * R / (4.0 * GetMatrixADeterminant()))
                           * (b[i] * b[j] + c[i] * c[j])
                           + Rd[i][j];
             }
@@ -167,11 +167,17 @@ void fem_triangle_element::Matrix_C(double_t C[DIMENSION][DIMENSION])
     p[2].x = third_point.x;
     p[2].y = third_point.y;
 
-    double_t D = 2.0 * PI * GetSquareTriangleArea() *  Coeff_Mass_c * Coeff_rho  /  180.0;
+    double_t D = 2.0 * PI * GetMatrixADeterminant() *  Coeff_Mass_c * Coeff_rho  /  180.0;
     double_t R[DIMENSION];
 
     for (int i = 0; i < DIMENSION; i++) {
         R[i] = p[i].rad_vector();
+    }
+
+    for (int i = 0; i < DIMENSION; i++) {
+        for (int j = 0; j < DIMENSION; j++) {
+            C[i][j] = 0;
+        }
     }
 
     C[0][0] = D * (12 * R[0] * R[0]
@@ -227,16 +233,40 @@ void fem_triangle_element::Column_F(double_t F[DIMENSION], double_t q, char elem
     switch(element_side)
     {
         case 't':
-            k = 2.0 * PI * GetThirdSideLength() * q / 6.0;
+            /*k = 2.0 * PI * GetSecondSideLength() * q / 6.0;*/
 
 
             /* Задаем граничное условие второго рода на стороне t */
-            if (fabs(RATIO_Y_TO_X * first_point.x - first_point.y) < EPS_T
-                && fabs(RATIO_Y_TO_X * third_point.x - third_point.y) < EPS_T  ) {
-                F[0] = k * (2.0 * first_point.rad_vector() + third_point.rad_vector());
-                F[2] = k * (first_point.rad_vector() + 2.0 * third_point.rad_vector());
+            /*if fabs(- RATIO_Y_TO_X * (second_point.x - TRIANGLE_BASE) - second_point.y) < EPS_T
+                && fabs(- RATIO_Y_TO_X * (third_point.x - TRIANGLE_BASE) - third_point.y) < EPS_T  )
+                    (third_point.y == TRIANGLE_HEIGHT) {
+                F[1] = k * (2.0 * second_point.rad_vector() + third_point.rad_vector());
+                //F[2] = k * (second_point.rad_vector() + 2.0 * third_point.rad_vector());
             }
-            break;
+            break;*/
+
+            double_t k1 = 2.0 * PI * GetFirstSideLength() * q / 6.0;
+            double_t k2 = 2.0 * PI * GetSecondSideLength() * q / 6.0;
+            double_t k3 = 2.0 * PI * GetThirdSideLength() * q / 6.0;
+
+            if (fabs(- RATIO_Y_TO_X * (second_point.x - TRIANGLE_BASE) - second_point.y) < EPS_T
+                && fabs(- RATIO_Y_TO_X * (third_point.x - TRIANGLE_BASE) - third_point.y) < EPS_T  )
+            {
+                F[1] += k2 * (2.0 * second_point.rad_vector() + third_point.rad_vector());
+                F[2] += k2 * (second_point.rad_vector() + 2.0 * third_point.rad_vector());
+            }
+
+            /*if (first_point.y < EPS_T * STEP_X )
+            {
+                F[0] += k1 * (2.0 * first_point.rad_vector() + second_point.rad_vector());
+                F[1] += k1 * (first_point.rad_vector() + 2.0 * second_point.rad_vector());
+            }
+
+            if (first_point.x < EPS_T * STEP_X)
+            {
+                F[0] += k3 * (2.0 * first_point.rad_vector() + third_point.rad_vector());
+                F[2] += k3 * (first_point.rad_vector() + 2.0 * third_point.rad_vector());
+            }*/
     }
 
     /* TODO пример реализации граничного условия первого или третьего рода на стороне f */

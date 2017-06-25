@@ -66,7 +66,7 @@ public:
      * или на прямой, сдвинутой относительно AB на step
      * (структура треугольника описана в constants.h)
      */
-    double_t LineFunction_ab(double_t x, double_t step);
+    double_t LineFunction_ab(double_t x);
 
     /*
      * Функция, вычисляющая значение координаты y на прямой BC треугольника

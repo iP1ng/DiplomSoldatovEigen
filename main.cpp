@@ -42,7 +42,9 @@ int main(int argc, char** argv)
      * Идем по всем элементам
      */
     /************************************************************************************/
-    for (auto element = 0; element < TRIANGLES_NUMBER; element++) {
+
+
+    for (int element = 0; element < TRIANGLES_NUMBER; element++) {
         /*
          * Вычисляем матрицы коэффициентов K_elem, C_elem и вектор правых частей F_elem для элемента
          * Предыдущие значения обнуляются в используемых функциях
@@ -61,21 +63,24 @@ int main(int argc, char** argv)
         index[2] = triangle_grid.triangles_array[element]->third_point.point_num;
 
         /* Накапливаем коэффициенты */
-        for (auto i = 0; i < DIMENSION; i++) {
+        for (int i = 0; i < DIMENSION; i++) {
             /* по формуле 11.21 */
             //F[index[i]] += (F_elem[i] + F_old[index[i]]);
-            for (auto j = 0; j < DIMENSION; j++) {
+            for (int j = 0; j < DIMENSION; j++) {
                 /* левая часть */
                 //Result_matrix[index[i]][index[j]] += ((C_elem[i][j] * 2.0 / TAU) + K_elem[i][j]);
                 tripletList.push_back(T(index[i],index[j], ((C_elem[i][j] * 2.0 / TAU) + K_elem[i][j])));
                 /* правая часть */
                 R[index[i]][index[j]] += ((C_elem[i][j] * 2.0 / TAU) - K_elem[i][j]);
+
             }
         }
     } // Конец цикла по элементам
 
     Result_M.setFromTriplets(tripletList.begin(), tripletList.end());
     Result_M.makeCompressed();
+
+
 
 /*    result_matrix << endl;
     result_matrix << "---------------------------------------------------" << endl;
@@ -110,12 +115,12 @@ int main(int argc, char** argv)
         /**
          * Вычисляем тепловой поток на границе в зависимости от времени полета
          */
-        heat_flow = - func_calculate_q(flight_time);
+        //heat_flow = - func_calculate_q(flight_time);
         /*if (heat_flow >= -100) {
             flight_time += 0.05;
             heat_flow = - func_calculate_q(flight_time);
         }*/
-        //heat_flow = - 100;
+        heat_flow = - 100;
         
 
         /**
@@ -134,7 +139,8 @@ int main(int argc, char** argv)
         for (auto i = 0; i < DOTS_NUMBER; i++) {
             F_old[i] = F[i];
             F[i] = 0;
-            Result_matrix[i][DOTS_NUMBER] = 0;
+            //Result_matrix[i][DOTS_NUMBER] = 0;
+            b[i] = 0;
         }
 
         for (auto element = 0; element < TRIANGLES_NUMBER; element++) {
@@ -157,17 +163,17 @@ int main(int argc, char** argv)
          */
         for (auto i = 0; i < DOTS_NUMBER; i++) {
             for (auto j = 0; j <DOTS_NUMBER; j++)
-                Result_matrix[i][DOTS_NUMBER] += (R[i][j] * Temperature[j]);
-                //b[i] += (R[i][j] * Temperature[j]);
+                //Result_matrix[i][DOTS_NUMBER] += (R[i][j] * Temperature[j]);
+                b[i] += (R[i][j] * Temperature[j]);
         }
         for (auto i = 0; i < DOTS_NUMBER; i++) {
-            Result_matrix[i][DOTS_NUMBER] -= F[i];
-            //b[i] -= F[i];
+            //Result_matrix[i][DOTS_NUMBER] -= F[i];
+            b[i] -= F[i];
             //cout << Result_matrix[i][DOTS_NUMBER] << endl;
         }
-        for (auto i = 0; i < DOTS_NUMBER; i++) {
-            b[i] = Result_matrix[i][DOTS_NUMBER];
-        }
+        //for (auto i = 0; i < DOTS_NUMBER; i++) {
+        //    b[i] = Result_matrix[i][DOTS_NUMBER];
+        //}
 
         /**
          * Вычисляем температуру на новом слое по времени

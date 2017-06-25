@@ -5,9 +5,9 @@
 #include "square_triangle_grid.h"
 
 
-double_t SquareTriangleGrid::LineFunction_ab(double_t x, double_t step)
+double_t SquareTriangleGrid::LineFunction_ab(double_t x)
 {
-    double_t y = RATIO_Y_TO_X * (x - step);
+    double_t y = - RATIO_Y_TO_X * (x - TRIANGLE_BASE);
     return y;
 }
 
@@ -64,7 +64,7 @@ uint_fast32_t SquareTriangleGrid::GetGreed(double_t step_x, points *cordinates, 
         for (;;)
         {
             x = ii * step_x;
-            y = LineFunction_ab(x, i * step_x);
+            y = l * RATIO_Y_TO_X * STEP_X;
             first_point = { x, y, k };
 
             cordinates[coord_num].x = x;
@@ -72,13 +72,14 @@ uint_fast32_t SquareTriangleGrid::GetGreed(double_t step_x, points *cordinates, 
             coord_num ++;
 
             x = (ii + 1) * step_x;
-            y = LineFunction_ab(x, (i + 1) * step_x);
+            y = l * RATIO_Y_TO_X * STEP_X;
             second_point = { x, y, k + 1 };
 
-            t1 = abs(x - LineFunction_bc());
+            t1 = abs(y - LineFunction_ab(x));
 
-            x = (ii + 1) * step_x;
-            y = LineFunction_ab(x, i * step_x);
+            x = ii * step_x;
+            y = RATIO_Y_TO_X * STEP_X * (l + 1);
+            //y = LineFunction_ab(x, i * step_x);
             third_point = { x, y, k + ((length / step_x) + 1) };
 
             triangles_array.push_back(new fem_triangle_element(first_point, second_point, third_point));
@@ -88,11 +89,11 @@ uint_fast32_t SquareTriangleGrid::GetGreed(double_t step_x, points *cordinates, 
                 GetGreedDebugMessages(triangles_array.at(j), j);
             }
 
-            t2 = abs(x - LineFunction_bc());
+            t2 = abs(y - LineFunction_ab(x));
 
             // Условие выхода на следующий уровень
             if ((t2 < EPS_T) && (t1 < EPS_T)) {
-                ii = l + 1;
+                ii = 0;
                 i = 0;
                 j++;
                 k = n;
@@ -115,8 +116,9 @@ uint_fast32_t SquareTriangleGrid::GetGreed(double_t step_x, points *cordinates, 
             second_point.y = triangles_array.back()->second_point.y;
             second_point.point_num = triangles_array.back()->second_point.point_num;
 
-            x = (ii + 2) * step_x;
-            y = LineFunction_ab(x, (i + 1) * step_x);
+            x = (ii + 1) * step_x;
+            y = RATIO_Y_TO_X * STEP_X * (l + 1);
+            //y = LineFunction_ab(x, (i + 1) * step_x);
 
             third_point = { x, y, k + 1 + ((length / step_x) + 1) };
             triangles_array.push_back(new fem_triangle_element(first_point, second_point, third_point));
@@ -138,7 +140,7 @@ uint_fast32_t SquareTriangleGrid::GetGreed(double_t step_x, points *cordinates, 
         }
     }
     cordinates[coord_num].x = cordinates[coord_num - 1].x;
-    cordinates[coord_num].y =  LineFunction_ab(cordinates[coord_num].x, i * step_x);
+    cordinates[coord_num].y =  LineFunction_ab(cordinates[coord_num].x);
 
     return triangles_array.back()->third_point.point_num;
 }
