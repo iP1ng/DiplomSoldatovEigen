@@ -11,9 +11,9 @@
  * Сетка
  */
 // Шаг по пространству
-const double_t STEP_X = 0.000005;
+const double_t STEP_X = 0.00005;
 // Шаг по времени
-const double_t TAU = 0.00001;
+const double_t TAU = 0.001;
 
 
 /**
@@ -29,9 +29,9 @@ const double_t TAU = 0.00001;
 // Координаты треугольника
 const double_t A_x = 0;
 // Высота треугольника
-const double_t TRIANGLE_HEIGHT = 0.002;
+const double_t TRIANGLE_HEIGHT = 0.02;
 // Основание треугольника
-const double_t TRIANGLE_BASE = 0.001;
+const double_t TRIANGLE_BASE = 0.01;
 // Коэффициент вытянутости треугольника по высоте (в работе 2:1)
 // Задает шаг по y и форму прямоугольних треугольников (и углы)
 const double_t RATIO_Y_TO_X = 2.0;

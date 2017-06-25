@@ -66,8 +66,6 @@ int main(int argc, char** argv)
 
         /* Накапливаем коэффициенты */
         for (int i = 0; i < DIMENSION; i++) {
-            /* по формуле 11.21 */
-            //F[index[i]] += (F_elem[i] + F_old[index[i]]);
             for (int j = 0; j < DIMENSION; j++) {
                 /* левая часть */
                 tripletList.push_back(T(index[i],index[j], ((C_elem[i][j] * 2.0 / TAU) + K_elem[i][j])));
@@ -86,23 +84,20 @@ int main(int argc, char** argv)
      * Пока не начнется плавление наконечника
      */
     /************************************************************************************/
-    while (Temperature[0] < MELTING_TEMPERATURE) {
+    while (Temperature[DOTS_NUMBER-1] < MELTING_TEMPERATURE) {
 
         average_temp = 0;
         flight_time += TAU;
 
-        for(auto i = 0; i < DOTS_NUMBER; i++)
-            average_temp +=  Temperature[i] / DOTS_NUMBER;
-
         /**
          * Вычисляем тепловой поток на границе в зависимости от времени полета
          */
-        //heat_flow = - func_calculate_q(flight_time);
-        /*if (heat_flow >= -100) {
-            flight_time += 0.05;
+        heat_flow = - func_calculate_q(flight_time);
+        if (heat_flow >= -100) {
+            flight_time += 0.001;
             heat_flow = - func_calculate_q(flight_time);
-        }*/
-        heat_flow = - 100;
+        }
+        //heat_flow = - 100;
         
 
         /**
