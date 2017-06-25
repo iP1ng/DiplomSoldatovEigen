@@ -14,11 +14,11 @@ double_t heat_flow = 0;
 /**
  * Вектор F правых частей для элемента
  */
-double_t *F_elem = new double_t[DIMENSION];
+double_t F_elem[DIMENSION];
 /**
  * Вектор F правой части для всех элементов
  */
-double_t *F = new double_t [DOTS_NUMBER];
+double_t *F = new double[DOTS_NUMBER];
 /**
  * Вектор F правой части для всех элементов на предыдущем временном слое
  */
@@ -30,15 +30,9 @@ double_t **R = new double_t *[DOTS_NUMBER];
 
 
 /**
- * Итоговая матрица теплопроводности, объединенная с итоговым вектором правой части
- */
-vector< vector<double_t> > Result_matrix(DOTS_NUMBER, std::vector<double_t>(DOTS_NUMBER+1));
-
-
-/**
  * Итоговое распределение температуры во всем треугольнике
  */
-double_t *Temperature = new double_t[DOTS_NUMBER];
+//double_t *Temperature = new double_t[DOTS_NUMBER];
 
 
 /**
@@ -72,7 +66,6 @@ void InitDimensionN()
         F[i] = 0;
         F_old[i] = F[i];
         R[i] = new double_t[DOTS_NUMBER];
-        Temperature[i] = INITIAL_TEMPERATURE;
         for (auto j = 0; j < DOTS_NUMBER; j++) {
             R[i][j] = 0;
         }

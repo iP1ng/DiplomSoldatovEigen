@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     // производим триангуляцию прямоугольного треугольника
     SquareTriangleGrid triangle_grid((points){A_x});
     //Массив координат узлов треугольников, полученных после триангуляции
-    points *coordinates = new points[DOTS_NUMBER];
+    points coordinates[DOTS_NUMBER];
     triangle_grid.GetGreed(STEP_X, coordinates, false);
 
 
@@ -29,6 +29,7 @@ int main(int argc, char** argv)
     std::vector<T> tripletList;
     tripletList.reserve(DOTS_NUMBER);
     Eigen::VectorXd b(DOTS_NUMBER);
+    Eigen::VectorXd Temperature(DOTS_NUMBER);
 
     ShowRunParameters();
 
@@ -36,7 +37,8 @@ int main(int argc, char** argv)
     InitDimension3();
     InitDimensionN();
 
-
+    for (uint_fast32_t i = 0; i < DOTS_NUMBER; i++)
+        Temperature[i] = INITIAL_TEMPERATURE;
     /************************************************************************************/
     /*
      * Идем по всем элементам
@@ -68,35 +70,15 @@ int main(int argc, char** argv)
             //F[index[i]] += (F_elem[i] + F_old[index[i]]);
             for (int j = 0; j < DIMENSION; j++) {
                 /* левая часть */
-                //Result_matrix[index[i]][index[j]] += ((C_elem[i][j] * 2.0 / TAU) + K_elem[i][j]);
                 tripletList.push_back(T(index[i],index[j], ((C_elem[i][j] * 2.0 / TAU) + K_elem[i][j])));
                 /* правая часть */
                 R[index[i]][index[j]] += ((C_elem[i][j] * 2.0 / TAU) - K_elem[i][j]);
-
             }
         }
     } // Конец цикла по элементам
 
     Result_M.setFromTriplets(tripletList.begin(), tripletList.end());
     Result_M.makeCompressed();
-
-
-
-/*    result_matrix << endl;
-    result_matrix << "---------------------------------------------------" << endl;
-    result_matrix << endl;
-    for (auto i = 0; i < DOTS_NUMBER; i++) {
-        for (auto j = 0; j < DOTS_NUMBER; j++) {
-            result_matrix <<  Result_matrix[i][j] << " ";
-        }
-        result_matrix << endl;
-    }
-
-    result_m << endl;
-    result_m << "---------------------------------------------------" << endl;
-    result_m << endl;
-    result_m << Result_M;
-    cout << "------------" << endl;*/
 
     /************************************************************************************/
     /*
@@ -139,7 +121,6 @@ int main(int argc, char** argv)
         for (auto i = 0; i < DOTS_NUMBER; i++) {
             F_old[i] = F[i];
             F[i] = 0;
-            //Result_matrix[i][DOTS_NUMBER] = 0;
             b[i] = 0;
         }
 
@@ -153,7 +134,6 @@ int main(int argc, char** argv)
             for (auto i = 0; i < DIMENSION; i++) {
                 /* по формуле 11.21 */
                 F[index[i]] += (F_elem[i] + F_old[index[i]]);
-                //cout << index[i] << " " << F[index[i]] << endl;
             }
         } // конец цикла по элементам
         
@@ -163,17 +143,12 @@ int main(int argc, char** argv)
          */
         for (auto i = 0; i < DOTS_NUMBER; i++) {
             for (auto j = 0; j <DOTS_NUMBER; j++)
-                //Result_matrix[i][DOTS_NUMBER] += (R[i][j] * Temperature[j]);
                 b[i] += (R[i][j] * Temperature[j]);
         }
         for (auto i = 0; i < DOTS_NUMBER; i++) {
-            //Result_matrix[i][DOTS_NUMBER] -= F[i];
             b[i] -= F[i];
-            //cout << Result_matrix[i][DOTS_NUMBER] << endl;
         }
-        //for (auto i = 0; i < DOTS_NUMBER; i++) {
-        //    b[i] = Result_matrix[i][DOTS_NUMBER];
-        //}
+
 
         /**
          * Вычисляем температуру на новом слое по времени
@@ -181,16 +156,43 @@ int main(int argc, char** argv)
         //equation.Solve(Temperature, Result_matrix);
         Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
         solver.compute(Result_M);
-        //Eigen::SimplicialCholesky<SpMat> chol(Result_M);  // performs a Cholesky factorization of A
-        //Eigen::VectorXd x = chol.solve(b);
-        Eigen::VectorXd x = solver.solve(b);
+        Eigen::SimplicialCholesky<SpMat> chol(Result_M);  // performs a Cholesky factorization of A
+        Eigen::VectorXd Temperature = chol.solve(b);
+        //Eigen::VectorXd x = solver.solve(b);
 
-        for (auto i = 0; i < DOTS_NUMBER; i++) {
-            Temperature[i] = x[i];
-            cout << Temperature[i] << endl;
-        }
-        cout <<" ===== " << endl;
-        ShowTemperature();
+        //for (auto i = 0; i < DOTS_NUMBER; i++) {
+        //    Temperature[i] = x[i];
+        //}
+
+
+            /**
+             * Debug вывод распределения температуры на треугольнике во времени
+             * для проверки полученного решения
+             */
+            int_fast32_t dots_shift = DOTS_NUMBER - 3;
+            uint_fast32_t level = 3;
+
+            triangle_temp << "Number of dots = " << DOTS_NUMBER << endl;
+            triangle_temp << "Number of triangles = " << TRIANGLES_NUMBER << endl;
+            triangle_temp << "Space step h = " << STEP_X << endl;
+            triangle_temp << "Time step tau = " << TAU << endl;
+            triangle_temp << "Thermal_Conductivity = " << Thermal_Conductivity << endl;
+            triangle_temp << "flight time = " << flight_time << endl;
+            triangle_temp << "heat flow = " << heat_flow << endl;
+
+            triangle_temp << setw(10) << setprecision(6)<< Temperature[DOTS_NUMBER - 1] << endl;
+
+            for (int_fast32_t i = DOTS_NUMBER - 2; level < (TRIANGLE_BASE / STEP_X + 3); i-=level) {
+                for (int j = 0; j < level - 1; j++) {
+                    triangle_temp << setw(10) << setprecision(6)<< Temperature[dots_shift + j] << " ";
+                }
+
+                dots_shift -= level;
+                level += 1;
+                triangle_temp << endl;
+            }
+            triangle_temp << endl;
+
 
 
     } // Конец цикла по времени

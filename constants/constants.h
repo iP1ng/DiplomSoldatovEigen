@@ -11,9 +11,9 @@
  * Сетка
  */
 // Шаг по пространству
-const double_t STEP_X = 0.00001;
+const double_t STEP_X = 0.000005;
 // Шаг по времени
-const double_t TAU = 0.0001;
+const double_t TAU = 0.00001;
 
 
 /**
